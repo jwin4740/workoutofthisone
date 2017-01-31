@@ -1,9 +1,9 @@
 var config = {
-apiKey: "AIzaSyA-d6axn-Er0ahgB4ZyebypjmVT7eXkcyU",
-authDomain: "roadtrip-app-529d8.firebaseapp.com",
-databaseURL: "https://roadtrip-app-529d8.firebaseio.com",
-storageBucket: "roadtrip-app-529d8.appspot.com",
-messagingSenderId: "74695053024"
+    apiKey: "AIzaSyBx2ZLAG5Y6NcPYpSIY-0HSLU5hUrrQ2Ww",
+    authDomain: "roadtripgmap.firebaseapp.com",
+    databaseURL: "https://roadtripgmap.firebaseio.com",
+    storageBucket: "roadtripgmap.appspot.com",
+    messagingSenderId: "787842381953"
 };
 
 firebase.initializeApp(config);
@@ -23,11 +23,14 @@ var trackURI = "";
 var numberOfArtists = 0;
 var totalNumberOfTimes = 0;
 var numberOfTracksPerArtist = 0;
+var numLogins;
+var loginCount = 0;
 // array to store uri to fetch each song from spotify
 var myTrackDataArray = [];
 var j = 0;
 var tripLength = 0; // in milliseconds this is a 1 hour trip
 var songLengthTotal = 0;
+var secondsOnline = 0;
 
 // ******** Google maps API code ********
 // Google maps function to get map and calls directionDisplay
@@ -82,7 +85,7 @@ function calculateAndDisplayRoute(directionsService, directionsDisplay, distance
 
         tripLength = length * 1000;
         console.log(response.rows[0].elements[0].duration.text);
-       
+
 
     });
 
@@ -112,9 +115,9 @@ $('#selectArtist').on('click', function() {
 //constructor trackdata object
 function trackdata(uri, songtitle, artist, songlength) {
     this.uri = uri,
-    this.songtitle = songtitle,
-    this.artist = artist,
-    this.songlength = songlength
+        this.songtitle = songtitle,
+        this.artist = artist,
+        this.songlength = songlength
 }
 
 // Function to get a list of tracks of favorite artist and related artists 
@@ -156,7 +159,7 @@ function getArtistTrack(artist) {
                         listOfTracks.push(response.tracks[i]);
                         checkIfDone();
                     }
-                    
+
                 });
             }
         });
@@ -217,7 +220,7 @@ function beginSpotifyPlaying() {
         do {
             numSeconds = numSeconds - 60;
             numMinutes++;
-        }while (numSeconds > 59);
+        } while (numSeconds > 59);
 
         console.log(numMinutes);
         console.log(numSeconds);
@@ -258,7 +261,7 @@ function beginSpotifyPlaying() {
         // Incrementing iterator
         j++;
 
-    }while (songLengthTotal < tripLength);
+    } while (songLengthTotal < tripLength);
 
     // Trip length
     $("#playlistlength").append((songLengthTotal / 1000) + " seconds");
@@ -274,5 +277,53 @@ function beginSpotifyPlaying() {
         });
         // Display the iFrame
         $("#nowplaying").html(currentFrame);
+    });
+}
+
+
+// firebase login traffic data
+database.ref("/totaltimeonline").set({timeon : secondsOnline});
+
+
+var connectionsRef = database.ref("/connections");
+
+// '.info/connected' is a special location provided by Firebase that is updated every time
+// the client's connection state changes.
+// '.info/connected' is a boolean value, true if the client is connected and false if they are not.
+var connectedRef = database.ref(".info/connected");
+
+// When the client's connection state changes...
+connectedRef.on("value", function(someoneNew) {
+
+    // If they are connected..
+    if (someoneNew.val()) {
+
+        // Add user to the connections list.
+        var con = connectionsRef.push(true);
+
+
+        // Remove user from the connection list when they disconnect.
+        
+        con.onDisconnect().remove();
+    }
+});
+
+
+database.ref("/logins").once("value", function(snapshot) {
+
+   
+    loginCount = parseInt(snapshot.val().views);
+    
+    console.log(loginCount);
+    updateLoginCount(loginCount);
+
+});
+
+
+function updateLoginCount(loginCount) {
+    loginCount++;
+    console.log(loginCount);
+    database.ref("/logins").set({
+        views: loginCount
     });
 }
