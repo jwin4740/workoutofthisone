@@ -1,14 +1,26 @@
+// AKhilas firebase
+
+// var config = {
+//     apiKey: "AIzaSyAXt8VC_K0qy0I1esj1Fvg96bZo856bakQ",
+// authDomain: "roadtripapp-a18f6.firebaseapp.com",
+// databaseURL: "https://roadtripapp-a18f6.firebaseio.com",
+// storageBucket: "roadtripapp-a18f6.appspot.com",
+// messagingSenderId: "125448158208"
+// };
+
+// James firebase
 var config = {
-    apiKey: "AIzaSyBx2ZLAG5Y6NcPYpSIY-0HSLU5hUrrQ2Ww",
-    authDomain: "roadtripgmap.firebaseapp.com",
-    databaseURL: "https://roadtripgmap.firebaseio.com",
-    storageBucket: "roadtripgmap.appspot.com",
-    messagingSenderId: "787842381953"
+    apiKey: "AIzaSyBTaP-0LgIFFa2gWd6hlKCr8cHEdoVK-2I",
+    authDomain: "therace-ec187.firebaseapp.com",
+    databaseURL: "https://therace-ec187.firebaseio.com",
+    storageBucket: "therace-ec187.appspot.com",
+    messagingSenderId: "490377130712"
 };
 
 firebase.initializeApp(config);
 
 var database = firebase.database();
+
 
 var startValue = "";
 var endValue = "";
@@ -23,14 +35,27 @@ var trackURI = "";
 var numberOfArtists = 0;
 var totalNumberOfTimes = 0;
 var numberOfTracksPerArtist = 0;
-var numLogins;
-var loginCount = 0;
+var songLengthSec = 0;
+var songLengthMin = 0;
+var songLengthHour = 0;
+var firstLoginCount = 0;
+var loginCount;
+var trafficLayer;
+var map = "";
+var analytics = "";
+var analyticsArray = [];
+var artCountArray = [];
+
 // array to store uri to fetch each song from spotify
 var myTrackDataArray = [];
 var j = 0;
 var tripLength = 0; // in milliseconds this is a 1 hour trip
 var songLengthTotal = 0;
-var secondsOnline = 0;
+// To store artist destination and timestamp for data analytics
+var analyticsData = {};
+
+// Trying to get the accordion to be collapsed on initial display ********** check this.
+$("#accordion").collapse("hide");
 
 // ******** Google maps API code ********
 // Google maps function to get map and calls directionDisplay
@@ -38,13 +63,27 @@ function initMap() {
     directionsService = new google.maps.DirectionsService;
     directionsDisplay = new google.maps.DirectionsRenderer;
     distance = new google.maps.DistanceMatrixService;
-    var map = new google.maps.Map($('#map')[0], {
+    trafficLayer = new google.maps.TrafficLayer();
+    var layer = new google.maps.FusionTablesLayer({
+          query: {
+            select: 'location',
+            from: '1xWyeuAhIFK_aED1ikkQEGmR8mINSCJO9Vq-BPQ'
+          },
+          heatmap: {
+            enabled: true
+          }
+        })
+    map = new google.maps.Map($('#map')[0], {
         zoom: 7,
         center: {
             lat: 41.85,
             lng: -87.65
         }
     });
+
+       
+        layer.setMap(map);
+      
     directionsDisplay.setMap(map);
     directionsDisplay.setPanel($('#right-panel')[0]);
     console.log($('#right-panel')[0]);
@@ -59,6 +98,13 @@ function initMap() {
 
 } // End of google map display
 
+$('#toggletraffic').on("click", function() {
+    trafficLayer.setMap(map);
+});
+
+function displayDirectionsMap() {
+    directionsDisplay.setMap(map);
+}
 // Function to calculate route, display and make call to Google distanceMatrix to get duration of trip
 function calculateAndDisplayRoute(directionsService, directionsDisplay, distance) {
     directionsService.route({
@@ -71,7 +117,8 @@ function calculateAndDisplayRoute(directionsService, directionsDisplay, distance
             directionsDisplay.setDirections(response);
 
         } else {
-            window.alert('Directions request failed due to ' + status);
+            console.log("ERROR - " + status);
+            // window.alert('Directions request failed due to ' + status);
         }
     });
 
@@ -85,29 +132,47 @@ function calculateAndDisplayRoute(directionsService, directionsDisplay, distance
 
         tripLength = length * 1000;
         console.log(response.rows[0].elements[0].duration.text);
-
+        // console.log(msLength);
 
     });
-
-
+    // Get current weather there
+    getCurrentWeather();
 } // End of function to calculate directions and distance
 
-// Main Submit button get route info
-$(".btn").on("click", function(e) {
+// Main Submit button get route info & modal button
+$(".submit").on("click", function(e) {
+    if (($("#start").val().trim() === "") || ($("#end").val().trim() === "")) {
+        return;
+    }
+    $('#myModal').modal('show');
     e.preventDefault();
     $("#right-panel").empty();
     initMap();
+    $("form").hide();
+    $("h3").hide();
+    // $("#collapse1").addClass("in");
 });
+
+$('#myModal').on('shown.bs.modal', function() {
+    $('#myInput').focus()
+})
+
 
 
 // ********* Code for Spotify song playing ********
 
 // On Button Click for Artist Selection
 $('#selectArtist').on('click', function() {
+    if ($("#artist-input").val().trim() === "") {
+        return;
+    }
     // Grab the Artist Name
     var artist = $('#artist-input').val().trim();
     // Run the Artist Player Function (Passing in the Artist as an Argument)
     getArtistTrack(artist);
+    // Letting user know
+    $("#artist-input").val("You have been SoNgIfIeD!! Enjoy!");
+    // Function to push data for data analytics
     // Prevents moving to the next page
     return false;
 });
@@ -118,6 +183,13 @@ function trackdata(uri, songtitle, artist, songlength) {
         this.songtitle = songtitle,
         this.artist = artist,
         this.songlength = songlength
+}
+
+// artist and count analytics
+function artcountconstruct(artist, artCount) {
+  
+        this.artist = artist,
+        this.artCount = artCount
 }
 
 // Function to get a list of tracks of favorite artist and related artists 
@@ -152,8 +224,7 @@ function getArtistTrack(artist) {
                     url: "https://api.spotify.com/v1/artists/" + artists[i] + "/top-tracks?country=SE",
                     method: "GET"
                 }).done(function(response) {
-                    console.log(response);
-                    console.log(artists.length);
+
                     /// WHEN DONE, LOOP THROUGH 'track[]' ARRAY TO GET EACH 'track' AND PUSH TO 'listOfTracks[]'
                     for (var i = 0; i < response.tracks.length; i++) {
                         listOfTracks.push(response.tracks[i]);
@@ -169,7 +240,7 @@ function getArtistTrack(artist) {
 // Function that checks if ajax calls are complete
 function checkIfDone() {
     --totalNumberOfTimes;
-    console.log(totalNumberOfTimes);
+
     if (totalNumberOfTimes == 0) {
         // console.log(listOfTracks);
         // console.log(listOfTracks[0].uri);
@@ -177,7 +248,8 @@ function checkIfDone() {
             var trackDatavar = new trackdata(listOfTracks[i].uri, listOfTracks[i].name, listOfTracks[i].artists[0].name, Math.floor(listOfTracks[i].duration_ms / 1000));
             // Array of trackData objects
             myTrackDataArray.push(trackDatavar);
-            database.ref("/tracklist").push(trackDatavar);
+            // Pushing tracklist to firebase
+            // database.ref("/tracklist").push(trackDatavar);
         }
         // console.log(myTrackDataArray);
         // Shuffling playlist
@@ -199,16 +271,11 @@ function playlistShuffle() {
     }
 } // End of shuffling function
 
-
-// Have -> Tracklist
-
-// Need to get -> songs playing on it's own from tracklist.
-// child.remove() listtoLast(1), 
-
-
 // Function to display iFrames for each track in tracklist, and display tracklist
 function beginSpotifyPlaying() {
     // do...while loop inserts iframes into DOM until the tracklist equals the trip duration
+
+    database.ref("/analyze").push(myTrackDataArray);
     do {
         // implement a conversion from seconds to minutes
         var numMinutes = 0;
@@ -257,14 +324,32 @@ function beginSpotifyPlaying() {
             numSeconds = "00";
         }
         // Appending each track number, name, and duration to tracklist div
-        $("#tracklist").append("<p class='displaytrack' data-value='" + j + "'>" + (j + 1) + ") " + myTrackDataArray[j].artist + ": <span>" + myTrackDataArray[j].songtitle + " (" + numMinutes + ":" + numSeconds + ")</span></p>");
+        $("#tracklist").append("<p class='displaytrack' data-value='" + j + "'><i class='fa fa-play-circle-o' aria-hidden='true'></i>" + (j + 1) + ". " + myTrackDataArray[j].artist + ": <span>" + myTrackDataArray[j].songtitle + " (" + numMinutes + ":" + numSeconds + ")</span></p><hr>");
         // Incrementing iterator
         j++;
 
     } while (songLengthTotal < tripLength);
 
     // Trip length
-    $("#playlistlength").append((songLengthTotal / 1000) + " seconds");
+    songLengthTotal = Math.floor((songLengthTotal / 1000)); // songlength in seconds
+    songLengthSec = songLengthTotal;
+    if (songLengthSec > 3599) {
+        do {
+
+            songLengthSec = songLengthSec - 3600;
+            songLengthHour++;
+        }
+        while (songLengthSec > 3599);
+    }
+    do {
+
+        songLengthSec = songLengthSec - 60;
+        songLengthMin++;
+    }
+    while (songLengthSec > 59);
+
+    console.log(songLengthTotal);
+    $("#playlistlength").append("( " + songLengthHour + "hrs " + songLengthMin + "mins " + songLengthSec + "secs)");
     // Playing each track on click of displayed track in tracklist
     $("#tracklist").on("click", ".displaytrack", function() {
         trackdatavalue = $(this).attr("data-value");
@@ -280,45 +365,36 @@ function beginSpotifyPlaying() {
     });
 }
 
+// To collect weather data
+function getCurrentWeather() {
+    var queryURL = "http://api.openweathermap.org/data/2.5/weather?q=" + endValue + "&APPID=51d5a2e80db66d661e97694890b4fb97";
 
-// firebase login traffic data
-database.ref("/totaltimeonline").set({timeon : secondsOnline});
+    $.ajax({
+        url: queryURL,
+        method: 'GET'
+    }).done(function(response) {
+        console.log(queryURL);
+        console.log(response);
+
+        $("#destination").html(endValue.toUpperCase());
+        $("#temperatureMax").html(Math.round((response.main.temp_max - 273.15) * 1.80 + 32) + " F");
+        $("#temperatureMin").html(Math.round((response.main.temp_min - 273.15) * 1.80 + 32) + " F");
+        $("#humidity").html(response.main.humidity);
+        $("#typeOfWeather").html("<img src='http://openweathermap.org/img/w/" + response.weather[0].icon + ".png'> " + response.weather[0].description);
+
+    });
+
+}
 
 
-var connectionsRef = database.ref("/connections");
-
-// '.info/connected' is a special location provided by Firebase that is updated every time
-// the client's connection state changes.
-// '.info/connected' is a boolean value, true if the client is connected and false if they are not.
-var connectedRef = database.ref(".info/connected");
-
-// When the client's connection state changes...
-connectedRef.on("value", function(someoneNew) {
-
-    // If they are connected..
-    if (someoneNew.val()) {
-
-        // Add user to the connections list.
-        var con = connectionsRef.push(true);
-
-
-        // Remove user from the connection list when they disconnect.
-        
-        con.onDisconnect().remove();
-    }
-});
-
+// pushes a count to firebase each time someone logs into out app
 
 database.ref("/logins").once("value", function(snapshot) {
-
-   
     loginCount = parseInt(snapshot.val().views);
-    
     console.log(loginCount);
     updateLoginCount(loginCount);
 
 });
-
 
 function updateLoginCount(loginCount) {
     loginCount++;
@@ -326,4 +402,40 @@ function updateLoginCount(loginCount) {
     database.ref("/logins").set({
         views: loginCount
     });
+    $("#logins").html(loginCount);
+    
+
 }
+// var artCount = 0;
+// database.ref("/analyze").on("child_added", function(childsnapshot) {
+
+//     for (var i = 0; i < 200; i++) {
+//         analyticsArray.push(childsnapshot.val()[i].artist);
+//         console.log(analytics);
+//     }
+//     analyticsArray.sort();
+//     console.log(analyticsArray);
+
+//     for (var i = 0; i < 200; i++) {
+
+//        var artCon = new artcountconstruct(analyticsArray[i], artCount)
+
+//         for (var j = 0; j < analyticsArray.length; j++) {
+//             if (analyticsArray[i] === analyticsArray[j]) {
+//                 artCon.artCount++;
+//             }
+
+//         }
+//         artCountArray.push(artCon);
+//         database.ref("/analyze/topartists").push({
+//             artist : analyticsArray[i],
+//             count : artCon.artCount
+
+
+//         })
+        
+//     }
+
+//     console.log(artCountArray);
+   
+// });
