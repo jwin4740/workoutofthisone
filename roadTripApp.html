@@ -58,7 +58,7 @@
         <!--Gathering User Information -->
         <div class="row">
             <div class="col-xs-12">
-                <form>
+                <form id="locationInputForm">
                     <div class="form-group">
                         <label for="start">Your Starting Location: </label>
                         <input type="text" class="form-control text-center" id="start" value="" placeholder="City,State/Complete Address">
@@ -80,10 +80,24 @@
                 </div>
                 <div id="collapse1" class="panel-collapse collapse in">
                     <div class="panel-body">
-                        <div class="col-xs-12 col-sm-7">
+                        <div class="col-xs-12 col-sm-7"><!-- 
+
                             <input id="toggledirections" type="checkbox" name="vehicle" value="Directions" checked> Directions
                             <br>
-                            <input id="toggletraffic" type="checkbox" name="vehicle" value="Traffic"> Traffic
+                            <input id="toggletraffic" type="checkbox" name="vehicle" value="Traffic"> Traffic -->
+                        <form>
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="toggleDirections" name="vehicle" value="Directions" checked>Directions
+                            </label>
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="toggleTraffic" name="vehicle" value="Traffic">Traffic
+                            </label>
+                            <!-- TODO -> Code for Heat Map to be added  -->
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="toggleHeatMap" name="vehicle" value="Heat Map">Heat Map
+                            </label>
+                          </form>
+
                             <div id="map"></div>
                         </div>
                         <div class="col-xs-12 col-sm-5">

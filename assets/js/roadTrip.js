@@ -98,7 +98,7 @@ function initMap() {
 
 } // End of google map display
 
-$('#toggletraffic').on("click", function() {
+$('#toggleTraffic').on("click", function() {
     trafficLayer.setMap(map);
 });
 
@@ -148,16 +148,14 @@ $(".submit").on("click", function(e) {
     e.preventDefault();
     $("#right-panel").empty();
     initMap();
-    $("form").hide();
+    $("#locationInputForm").hide();
     $("h3").hide();
     // $("#collapse1").addClass("in");
 });
 
 $('#myModal').on('shown.bs.modal', function() {
     $('#myInput').focus()
-})
-
-
+});
 
 // ********* Code for Spotify song playing ********
 
