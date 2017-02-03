@@ -58,7 +58,7 @@
         <!--Gathering User Information -->
         <div class="row">
             <div class="col-xs-12">
-                <form>
+                <form id="locationInputForm">
                     <div class="form-group">
                         <label for="start">Your Starting Location: </label>
                         <input type="text" class="form-control text-center" id="start" value="" placeholder="City,State/Complete Address">
@@ -81,9 +81,24 @@
                 <div id="collapse1" class="panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="col-xs-12 col-sm-7">
-                            <input id="toggledirections" type="checkbox" name="vehicle" value="Directions" checked> Directions
+                            
+                           <!--  <input id="toggledirections" type="checkbox" name="vehicle" value="Directions" checked> Directions
                             <br>
-                            <input id="toggletraffic" type="checkbox" name="vehicle" value="Traffic"> Traffic
+                            <input id="toggletraffic" type="checkbox" name="vehicle" value="Traffic"> Traffic -->
+                            
+                            <form>
+                            <label class="checkbox-inline">
+                              <input type="checkbox" class="mapOptions" id="toggleDirections" name="vehicle" value="Directions" checked>Directions
+                            </label>
+                            <label class="checkbox-inline">
+                              <input type="checkbox" class="mapOptions" id="toggleTraffic" name="vehicle" value="Traffic">Traffic
+                            </label>
+                            <!-- TODO -> Code for Heat Map to be added  -->
+                            <label class="checkbox-inline">
+                              <input type="checkbox" class="mapOptions" id="toggleHeatmap" name="vehicle" value="Heat Map">Heat Map
+                            </label>
+                          </form>
+
                             <div id="map"></div>
                         </div>
                         <div class="col-xs-12 col-sm-5">
@@ -132,18 +147,44 @@
                 </div>
             </div>
         </div>
+
         <div id="nowplaying"></div>
-        <div id="analytics">
-            <h4> ANALYTICS </h4>
+        
+        <!-- This feature is for future implementation of analytics with authentication for admin users -->
+        <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion2" href="#collapse4"><i class="fa fa-lg fa-bar-chart" aria-hidden="true"></i>ANALYTICS</a>
+                    </h4>
+                </div>
+                <div id="collapse4" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div id="analytics">
+                             <p>This app has had <span id="logins"></span> visitors!!</p>
+                            <hr>
+                             <h4> Your most popular artists </h4>
+                            <span id="yourtospanartists"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+
+           <!--  <h4> ANALYTICS </h4>
             <p>This app has had <span id="logins"></span> visitors!!</p>
             <br>
             <br>
             <div>
                 <h4> Your most popular artists </h4>
                 <span id="yourtospanartists"></span>
-            </div>
+            </div> -->
         </div>
-    </div>
+    <!-- </div> -->
+    <footer class="container-fluid text-center">
+        <div>
+            <small>&copy; Project 1 Group 2 - James Winkle, Akhila RK, Tre A-D, Patrick Register</small>
+        </div>
+    </footer>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJBKqmHFJ_X-wOXl3UBg46WgUwqzGDEHY">

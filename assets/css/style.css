@@ -145,6 +145,47 @@ i {
     margin-bottom: 20px;
 }
 
-/* TO-DO- 
-MEDIA QUERIES FOR MINOR TWEAKING FOR MOBILE VIEW
+/*
+.footer {
+    border-top: 2px solid white;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    
+}*/
+
+footer {
+    background-color: rgba(0,0,0,0.6);
+    height: 60px;
+    padding: 15px;
+}
+/*  
+MEDIA QUERIES FOR MOBILE VIEW
 */
+
+@media (max-width: 500px) {
+    #map {
+        border: solid 2px white;
+        width: 280px;
+        height: 280px;
+        padding: 0;
+        margin: 0 auto;
+    }
+    .weather {
+        margin-left: 20px;
+    }
+ 
+    .weatherStats {
+        margin-left: 25px;
+    }
+ 
+    #right-panel {
+        width: 310px;
+    }
+    #tracklistcontainer {
+       width: 310px;
+    }
+ 
+}
+
